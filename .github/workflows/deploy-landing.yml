@@ -1,4 +1,4 @@
-name: Deploy landing page + pack CRX to GitHub Pages
+name: Build landing page + pack extension zip to GitHub Pages
 
 on:
   push:
@@ -35,78 +35,32 @@ jobs:
       - run: npm ci
       - run: npm run build
 
-      - name: Pack CRX
-        working-directory: /tmp
+      - name: Pack extension zip for release
         shell: bash
         run: |
-          KEY_FILE=/tmp/key.pem
-          if [ -n "${{ secrets.EXTENSION_PEM_KEY }}" ]; then
-            echo "${{ secrets.EXTENSION_PEM_KEY }}" > "$KEY_FILE"
-          else
-            openssl genrsa -out "$KEY_FILE" 2048
-            echo "::notice::No EXTENSION_PEM_KEY secret set. Using ephemeral key (extension ID changes per build)."
-          fi
+          VERSION=$(python3 -c "import json; print(json.load(open('${{ github.workspace }}/extension/manifest.json'))['version'])")
+          ZIPNAME="LyricPiP-v$VERSION.zip"
+          cd "${{ github.workspace }}"
+          zip -r "/tmp/$ZIPNAME" extension/ -x "extension/*.pem"
+          echo "ZIPNAME=$ZIPNAME" >> "$GITHUB_ENV"
 
-          EXT="${{ github.workspace }}/extension"
-          OUT="${{ github.workspace }}/landing/dist/extension.crx"
-          PACKED=false
-
-          # 1) Chrome + xvfb (most reliable for valid CRX3)
-          if command -v xvfb-run &>/dev/null && command -v google-chrome &>/dev/null; then
-            echo "Trying google-chrome --pack-extension (xvfb) ..."
-            xvfb-run -a google-chrome --pack-extension="$EXT" \
-              --pack-extension-key="$KEY_FILE" --no-sandbox --disable-gpu 2>/dev/null || true
-            if [ -f "${EXT}.crx" ]; then
-              mv "${EXT}.crx" "$OUT"
-              rm -f "${EXT}.pem"
-              PACKED=true
-              echo "CRX packed with Chrome ($(wc -c < "$OUT") bytes)"
-            fi
-          fi
-
-          # 2) Chrome headless (fallback)
-          if [ "$PACKED" = false ] && command -v google-chrome &>/dev/null; then
-            echo "Trying google-chrome --pack-extension (headless) ..."
-            google-chrome --headless=new --pack-extension="$EXT" \
-              --pack-extension-key="$KEY_FILE" --no-sandbox --disable-gpu 2>/dev/null || true
-            if [ -f "${EXT}.crx" ]; then
-              mv "${EXT}.crx" "$OUT"
-              rm -f "${EXT}.pem"
-              PACKED=true
-              echo "CRX packed with Chrome (headless) ($(wc -c < "$OUT") bytes)"
-            fi
-          fi
-
-          # 3) npx crx3 (last resort)
-          if [ "$PACKED" = false ]; then
-            echo "Chrome pack failed. Trying npx crx3 ..."
-            npx crx3 "$EXT" -o "$OUT" -p "$KEY_FILE"
-            echo "CRX packed with crx3 ($(wc -c < "$OUT") bytes)"
-          fi
-
-          rm -f "$KEY_FILE"
-
-      - name: Upload CRX to GitHub Release
+      - name: Upload to GitHub Release
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           VERSION=$(python3 -c "import json; print(json.load(open('${{ github.workspace }}/extension/manifest.json'))['version'])")
-          TAG="crx-v$VERSION"
+          ZIPNAME="LyricPiP-v$VERSION.zip"
 
-          # Delete previous release with same tag if it exists
-          gh release view "$TAG" --json tagName --jq .tagName 2>/dev/null && \
-            gh release delete "$TAG" --yes --cleanup-tag 2>/dev/null || true
-
-          # Delete rolling 'latest' release too
+          # Clean up previous 'latest' release
           gh release view latest --json tagName --jq .tagName 2>/dev/null && \
             gh release delete latest --yes --cleanup-tag 2>/dev/null || true
 
           gh release create latest \
             --title "LyricPiP v$VERSION" \
-            --notes "Auto-built from commit ${{ github.sha }}" \
+            --notes "Auto-built from commit ${{ github.sha }}. See [Install instructions](https://flixyudh.github.io/lyricpip/#install)." \
             --target "${{ github.sha }}" \
-            "${{ github.workspace }}/landing/dist/extension.crx#LyricPiP-v$VERSION.crx"
+            "/tmp/$ZIPNAME#$ZIPNAME"
 
       - uses: actions/upload-pages-artifact@v3
         with:

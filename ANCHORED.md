@@ -142,10 +142,8 @@ Full details: `ARCHITECTURE.md`.
   Tab-hide resilience: `nowSeconds()` prefers DOM clock when media snapshot is >2 s stale;
   `setActiveLine` only scrolls to top at `idx === -1` (sync-confirmed before-first-line),
   not uninitialized sentinel values.
-- **CRX builds**: packed on every push via GitHub Actions (`deploy-landing.yml`); available at
-  `https://flixyudh.github.io/lyricpip/extension.crx` on the landing page. Local packing via
-  `bash scripts/pack-crx.sh`. The signing key is stored as the `EXTENSION_PEM_KEY` GitHub secret
-  for consistent extension IDs across builds.
+- **Extension zips**: zipped on every push via GitHub Actions (`deploy-landing.yml`) and uploaded
+  as a GitHub Release asset (`latest`).
 - **Backlog** (prioritized): click-to-seek lyric lines, per-track offset persistence, more
   platforms (YouTube Music, SoundCloud), Chrome Web Store assets.
 
