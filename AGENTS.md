@@ -15,7 +15,7 @@ Chrome extension (Manifest V3) at `extension/` with a marketing landing page at 
 | Build landing page | `cd landing && npm run build` |
 | Dev landing page | `cd landing && npm run dev` |
 | Deploy landing page + CRX | push to `main` (GitHub Actions builds `landing/dist` + packs `extension.crx` → GitHub Pages) |
-| Pack CRX locally | `bash scripts/pack-crx.sh` (generates `extension.crx`; creates `key.pem` if absent) |
+| Pack CRX locally | `bash scripts/pack-crx.sh` (uses Chrome's own packer, falls back to `npx crx3`; creates `key.pem` if absent) |
 | Generate signing key | `openssl genrsa -out key.pem 2048` (first-time setup; save as `EXTENSION_PEM_KEY` GitHub secret) |
 
 ## Release checklist (run after ANY change in extension/)

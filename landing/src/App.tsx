@@ -107,7 +107,7 @@ export default function App() {
            <li>Open YouTube or Spotify Web, play a song — the floating PiP button appears.</li>
            <li>Press <kbd>J</kbd> or click the <strong>PiP button</strong> to open lyrics in an always-on-top window.</li>
         </ol>
-        <p className="note">Requires Chrome 116+ (Document Picture-in-Picture API).<br/>The <code>.crx</code> is rebuilt on every push — always points at the latest commit.</p>
+        <p className="note">Requires Chrome 116+ (Document Picture-in-Picture API).<br/>The <code>.crx</code> is rebuilt on every push — always points at the latest commit.<br/>If drag-and-drop fails, use <strong>Load unpacked</strong> instead (recommended for developers).</p>
       </section>
 
       <section className="section permissions">

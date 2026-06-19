@@ -36,23 +36,55 @@ jobs:
       - run: npm run build
 
       - name: Pack CRX
+        working-directory: /tmp
+        shell: bash
         run: |
+          KEY_FILE=/tmp/key.pem
           if [ -n "${{ secrets.EXTENSION_PEM_KEY }}" ]; then
-            echo "${{ secrets.EXTENSION_PEM_KEY }}" > /tmp/key.pem
-            npx crx3 ../extension/ -o dist/extension.crx -p /tmp/key.pem
-            rm -f /tmp/key.pem
+            echo "${{ secrets.EXTENSION_PEM_KEY }}" > "$KEY_FILE"
           else
-            mkdir -p /tmp/crx-key
-            openssl genrsa -out /tmp/crx-key/key.pem 2048
-            npx crx3 ../extension/ -o dist/extension.crx -p /tmp/crx-key/key.pem
-            echo ""
-            echo "::notice::No EXTENSION_PEM_KEY secret found. A new signing key was generated."
-            echo "::notice::Save the following key as the EXTENSION_PEM_KEY secret for consistent extension IDs:"
-            echo ""
-            cat /tmp/crx-key/key.pem
-            rm -rf /tmp/crx-key
+            openssl genrsa -out "$KEY_FILE" 2048
+            echo "::notice::No EXTENSION_PEM_KEY secret set. Using ephemeral key (extension ID changes per build)."
           fi
-          echo "CRX size: $(wc -c < dist/extension.crx) bytes"
+
+          EXT="${{ github.workspace }}/extension"
+          OUT="${{ github.workspace }}/landing/dist/extension.crx"
+          PACKED=false
+
+          # 1) Chrome + xvfb (most reliable for valid CRX3)
+          if command -v xvfb-run &>/dev/null && command -v google-chrome &>/dev/null; then
+            echo "Trying google-chrome --pack-extension (xvfb) ..."
+            xvfb-run -a google-chrome --pack-extension="$EXT" \
+              --pack-extension-key="$KEY_FILE" --no-sandbox --disable-gpu 2>/dev/null || true
+            if [ -f "${EXT}.crx" ]; then
+              mv "${EXT}.crx" "$OUT"
+              rm -f "${EXT}.pem"
+              PACKED=true
+              echo "CRX packed with Chrome ($(wc -c < "$OUT") bytes)"
+            fi
+          fi
+
+          # 2) Chrome headless (fallback)
+          if [ "$PACKED" = false ] && command -v google-chrome &>/dev/null; then
+            echo "Trying google-chrome --pack-extension (headless) ..."
+            google-chrome --headless=new --pack-extension="$EXT" \
+              --pack-extension-key="$KEY_FILE" --no-sandbox --disable-gpu 2>/dev/null || true
+            if [ -f "${EXT}.crx" ]; then
+              mv "${EXT}.crx" "$OUT"
+              rm -f "${EXT}.pem"
+              PACKED=true
+              echo "CRX packed with Chrome (headless) ($(wc -c < "$OUT") bytes)"
+            fi
+          fi
+
+          # 3) npx crx3 (last resort)
+          if [ "$PACKED" = false ]; then
+            echo "Chrome pack failed. Trying npx crx3 ..."
+            npx crx3 "$EXT" -o "$OUT" -p "$KEY_FILE"
+            echo "CRX packed with crx3 ($(wc -c < "$OUT") bytes)"
+          fi
+
+          rm -f "$KEY_FILE"
 
       - uses: actions/upload-pages-artifact@v3
         with:
