@@ -96,7 +96,7 @@ export default function App() {
            <li>Open YouTube or Spotify Web, play a song — the floating PiP button appears.</li>
            <li>Press <kbd>J</kbd> or click the <strong>PiP button</strong> to open lyrics in an always-on-top window.</li>
         </ol>
-        <p className="note">Requires Chrome 116+ (Document Picture-in-Picture API).<br/>A <code>.crx</code> is also built on every push — download it from the <a href="https://github.com/flixyudh/lyricpip/actions" target="_blank" rel="noopener noreferrer">Actions</a> artifact.</p>
+        <p className="note">Requires Chrome 116+ (Document Picture-in-Picture API).<br/>A <code>.crx</code> is also built on every push — download the <a href="https://github.com/flixyudh/lyricpip/releases/tag/latest" target="_blank" rel="noopener noreferrer">latest release</a>.</p>
       </section>
 
       <section className="section permissions">
