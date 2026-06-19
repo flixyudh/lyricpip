@@ -143,7 +143,7 @@ Full details: `ARCHITECTURE.md`.
   `setActiveLine` only scrolls to top at `idx === -1` (sync-confirmed before-first-line),
   not uninitialized sentinel values.
 - **CRX builds**: packed on every push via GitHub Actions (`deploy-landing.yml`); available at
-  `https://lyricpip.github.io/lyricpip/extension.crx` on the landing page. Local packing via
+  `https://flixyudh.github.io/lyricpip/extension.crx` on the landing page. Local packing via
   `bash scripts/pack-crx.sh`. The signing key is stored as the `EXTENSION_PEM_KEY` GitHub secret
   for consistent extension IDs across builds.
 - **Backlog** (prioritized): click-to-seek lyric lines, per-track offset persistence, more

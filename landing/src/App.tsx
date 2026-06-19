@@ -100,7 +100,7 @@ export default function App() {
         <div className="install-or"><span>or</span></div>
 
         <ol>
-          <li>Clone or <a href="https://github.com/anomalyco/lyricpip" target="_blank" rel="noopener noreferrer">download</a> this repository.</li>
+          <li>Clone or <a href="https://github.com/flixyudh/lyricpip" target="_blank" rel="noopener noreferrer">download</a> this repository.</li>
           <li>Open Chrome and go to <code>chrome://extensions</code>.</li>
           <li>Enable <strong>Developer mode</strong> (top-right toggle).</li>
           <li>Click <strong>Load unpacked</strong> and select the <code>extension</code> folder.</li>

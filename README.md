@@ -2,9 +2,9 @@
 
 Karaoke-style synced lyrics for **YouTube** and **Spotify Web**, with an always-on-top PiP lyrics window. Powered by [LRCLIB](https://lrclib.net) — free, no API key required.
 
-**[Install](https://lyricpip.github.io/)** &nbsp;·&nbsp; **[Source](https://github.com/lyricpip/lyricpip)**
+**[Install](https://flixyudh.github.io/lyricpip/)** &nbsp;·&nbsp; **[Source](https://github.com/flixyudh/lyricpip)**
 
-[![Landing page](https://github.com/lyricpip/lyricpip/actions/workflows/deploy-landing.yml/badge.svg)](.github/workflows/deploy-landing.yml)
+[![Landing page](https://github.com/flixyudh/lyricpip/actions/workflows/deploy-landing.yml/badge.svg)](.github/workflows/deploy-landing.yml)
 
 ## Quick start
 
