@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LyricPiP</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body data-lpp-theme="dark">
+  <div class="popup">
+    <header class="popup-header">
+      <div class="brand">
+        <div class="brand-mark">
+          <span></span><span></span><span></span>
+        </div>
+        <div class="brand-name">LyricPiP</div>
+      </div>
+      <button id="theme-toggle" class="icon-btn" title="Toggle theme" data-testid="popup-theme-toggle"></button>
+    </header>
+
+    <section id="unsupported" class="panel hidden" data-testid="unsupported-panel">
+      <p class="panel-title">Not a supported page</p>
+      <p class="panel-text">Open a song on YouTube or Spotify Web and LyricPiP will pick it up automatically.</p>
+      <p class="panel-text" style="margin-top: 8px;">Already on YouTube or Spotify? <strong>Refresh the page</strong> &mdash; the tab was opened before the extension was installed or updated.</p>
+      <div class="quick-links">
+        <a href="https://www.youtube.com" target="_blank" rel="noreferrer" data-testid="open-youtube-link">YouTube &nearr;</a>
+        <a href="https://open.spotify.com" target="_blank" rel="noreferrer" data-testid="open-spotify-link">Spotify Web &nearr;</a>
+      </div>
+    </section>
+
+    <section id="track-panel" class="panel hidden" data-testid="track-panel">
+      <div class="track-row">
+        <img id="artwork" class="artwork" alt="" />
+        <div class="track-meta">
+          <div id="track-title" class="track-title" data-testid="popup-track-title">No track detected</div>
+          <div id="track-artist" class="track-artist" data-testid="popup-track-artist"></div>
+        </div>
+      </div>
+      <div class="status-row">
+        <span id="status-badge" class="badge" data-testid="lyrics-status-badge">idle</span>
+        <span id="platform-badge" class="badge badge-outline"></span>
+      </div>
+      <div id="current-line" class="current-line hidden" data-testid="popup-current-line"></div>
+
+      <div class="control-grid">
+        <div class="offset-control">
+          <button id="offset-minus" class="icon-btn" title="Lyrics earlier" data-testid="popup-offset-minus">&minus;</button>
+          <span id="offset-value" class="offset-value" data-testid="popup-offset-value">+0.0s</span>
+          <button id="offset-plus" class="icon-btn" title="Lyrics later" data-testid="popup-offset-plus">+</button>
+        </div>
+      </div>
+
+      <div class="shortcuts-hint" data-testid="shortcuts-hint">
+        <strong>Shortcuts:</strong> <kbd>J</kbd> PiP (on page) &middot; <kbd>D</kbd> debug
+      </div>
+
+      <div class="settings-bar">
+        <button id="settings-gear" class="gear-btn" title="Settings" data-testid="settings-gear">&#9881;</button>
+        <div id="settings-popover" class="settings-popover hidden" data-testid="settings-popover">
+          <div class="setting-row">
+            <span class="setting-label">Font size</span>
+            <div class="setting-control">
+              <button class="icon-btn" id="font-size-minus" title="Smaller">&minus;</button>
+              <span id="font-size-value" class="setting-value">15</span>
+              <button class="icon-btn" id="font-size-plus" title="Larger">+</button>
+            </div>
+          </div>
+          <div class="setting-row">
+            <span class="setting-label">Alignment</span>
+            <div class="align-group">
+              <button class="align-btn" data-align="left" data-testid="align-left">L</button>
+              <button class="align-btn" data-align="center" data-testid="align-center">C</button>
+              <button class="align-btn" data-align="right" data-testid="align-right">R</button>
+            </div>
+          </div>
+          <div class="setting-divider"></div>
+          <button id="resync-btn" class="resync-btn" data-testid="resync-btn">&#x21bb; Re-fetch lyrics</button>
+        </div>
+      </div>
+    </section>
+
+    <footer class="popup-footer">
+      <span>YouTube &middot; Spotify Web</span>
+      <span>Lyrics &middot; LRCLIB</span>
+    </footer>
+
+    <section id="debug-section" class="debug hidden" data-testid="debug-section">
+      <button id="debug-toggle" class="debug-toggle" data-testid="debug-toggle">&#9881; Debug</button>
+      <div id="debug-content" class="debug-content hidden">
+        <div class="debug-row"><span class="debug-label">Tab ID:</span><span id="debug-tab-id" class="debug-value">—</span></div>
+        <div class="debug-row"><span class="debug-label">Message:</span><span id="debug-message" class="debug-value">—</span></div>
+        <div class="debug-row"><span class="debug-label">Last error:</span><span id="debug-last-error" class="debug-value debug-error">—</span></div>
+        <div class="debug-row"><span class="debug-label">Response:</span><span id="debug-response" class="debug-value">—</span></div>
+        <div class="debug-actions">
+          <button id="debug-retry" class="debug-btn" data-testid="debug-retry">Retry GET_STATE</button>
+          <button id="debug-inject" class="debug-btn" data-testid="debug-inject">Re-inject content script</button>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
