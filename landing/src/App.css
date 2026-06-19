@@ -240,64 +240,6 @@ body {
 }
 
 /* Install */
-.install-download {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  background: var(--surface);
-  border: 1px solid var(--accent);
-  border-radius: var(--radius);
-  padding: 20px 24px;
-  margin-bottom: 24px;
-}
-
-.btn-download {
-  background: var(--accent);
-  color: #fff;
-  flex-shrink: 0;
-}
-
-.btn-download:hover {
-  background: var(--accent-hover);
-}
-
-.install-download-note {
-  font-size: 13px;
-  color: var(--text2);
-  line-height: 1.4;
-}
-
-.install-download-note code {
-  background: var(--bg);
-  padding: 1px 6px;
-  border-radius: 4px;
-  font-size: 12px;
-}
-
-.install-or {
-  text-align: center;
-  margin-bottom: 20px;
-  position: relative;
-}
-
-.install-or::before {
-  content: '';
-  position: absolute;
-  inset: 50% 0 0 0;
-  height: 1px;
-  background: var(--border);
-}
-
-.install-or span {
-  position: relative;
-  background: var(--bg);
-  padding: 0 16px;
-  font-size: 13px;
-  color: var(--text2);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
 .install ol {
   display: flex;
   flex-direction: column;

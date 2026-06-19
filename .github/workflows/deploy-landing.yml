@@ -86,6 +86,13 @@ jobs:
 
           rm -f "$KEY_FILE"
 
+      - name: Upload CRX as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension.crx
+          path: landing/dist/extension.crx
+          if-no-files-found: error
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: landing/dist

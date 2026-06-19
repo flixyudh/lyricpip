@@ -88,17 +88,6 @@ export default function App() {
       <section id="install" className="section install">
         <h2>Install</h2>
 
-        <div className="install-download">
-          <a className="btn btn-download" href="./extension.crx" download="lyricpip.crx">
-            ⬇ Download .crx
-          </a>
-          <span className="install-download-note">
-            Then drag the file into <code>chrome://extensions</code> with Developer mode enabled.
-          </span>
-        </div>
-
-        <div className="install-or"><span>or</span></div>
-
         <ol>
           <li>Clone or <a href="https://github.com/flixyudh/lyricpip" target="_blank" rel="noopener noreferrer">download</a> this repository.</li>
           <li>Open Chrome and go to <code>chrome://extensions</code>.</li>
@@ -107,7 +96,7 @@ export default function App() {
            <li>Open YouTube or Spotify Web, play a song — the floating PiP button appears.</li>
            <li>Press <kbd>J</kbd> or click the <strong>PiP button</strong> to open lyrics in an always-on-top window.</li>
         </ol>
-        <p className="note">Requires Chrome 116+ (Document Picture-in-Picture API).<br/>The <code>.crx</code> is rebuilt on every push — always points at the latest commit.<br/>If drag-and-drop fails, use <strong>Load unpacked</strong> instead (recommended for developers).</p>
+        <p className="note">Requires Chrome 116+ (Document Picture-in-Picture API).<br/>A <code>.crx</code> is also built on every push — download it from the <a href="https://github.com/flixyudh/lyricpip/actions" target="_blank" rel="noopener noreferrer">Actions</a> artifact.</p>
       </section>
 
       <section className="section permissions">
