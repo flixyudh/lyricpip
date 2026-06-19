@@ -88,15 +88,24 @@ export default function App() {
       <section id="install" className="section install">
         <h2>Install</h2>
 
+        <h3>Method A — Clone (recommended)</h3>
         <ol>
           <li>Clone or <a href="https://github.com/flixyudh/lyricpip" target="_blank" rel="noopener noreferrer">download</a> this repository.</li>
           <li>Open Chrome and go to <code>chrome://extensions</code>.</li>
           <li>Enable <strong>Developer mode</strong> (top-right toggle).</li>
           <li>Click <strong>Load unpacked</strong> and select the <code>extension</code> folder.</li>
-           <li>Open YouTube or Spotify Web, play a song — the floating PiP button appears.</li>
-           <li>Press <kbd>J</kbd> or click the <strong>PiP button</strong> to open lyrics in an always-on-top window.</li>
         </ol>
-        <p className="note">Requires Chrome 116+ (Document Picture-in-Picture API).<br/>A ZIP of the latest code is available on the <a href="https://github.com/flixyudh/lyricpip/releases/tag/latest" target="_blank" rel="noopener noreferrer">Releases page</a>.</p>
+
+        <h3>Method B — ZIP download</h3>
+        <ol>
+          <li>Download the ZIP from the <a href="https://github.com/flixyudh/lyricpip/releases/tag/latest" target="_blank" rel="noopener noreferrer">latest release</a>.</li>
+          <li>Extract the archive — you'll get an <code>extension</code> folder.</li>
+          <li>Open Chrome and go to <code>chrome://extensions</code>.</li>
+          <li>Enable <strong>Developer mode</strong> (top-right toggle).</li>
+          <li>Click <strong>Load unpacked</strong> and select the extracted <code>extension</code> folder.</li>
+        </ol>
+
+        <p className="note">Requires Chrome 116+ (Document Picture-in-Picture API). Once installed, open YouTube or Spotify Web, play a song — the floating PiP button appears. Press <kbd>J</kbd> or click it to open lyrics in an always-on-top window.</p>
       </section>
 
       <section className="section permissions">

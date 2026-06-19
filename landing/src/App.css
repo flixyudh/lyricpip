@@ -240,6 +240,15 @@ body {
 }
 
 /* Install */
+.install h3 {
+  margin: 24px 0 12px;
+  font-size: 16px;
+}
+
+.install h3:first-of-type {
+  margin-top: 0;
+}
+
 .install ol {
   display: flex;
   flex-direction: column;
