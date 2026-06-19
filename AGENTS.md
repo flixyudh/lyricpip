@@ -14,7 +14,7 @@ Chrome extension (Manifest V3) at `extension/` with a marketing landing page at 
 | Validate manifest | `python3 -c "import json; json.load(open('extension/manifest.json'))"` |
 | Build landing page | `cd landing && npm run build` |
 | Dev landing page | `cd landing && npm run dev` |
-| Deploy landing page + CRX | push to `main` — GitHub Actions builds `landing/dist`, packs `extension.crx` using Chrome's own packer, uploads it as a downloadable artifact, and deploys to GitHub Pages |
+| Deploy landing page + CRX | push to `main` — GitHub Actions builds `landing/dist`, packs `extension.crx` using Chrome's own packer, publishes it as a GitHub Release asset (`latest`), and deploys to GitHub Pages |
 | Generate signing key | `openssl genrsa -out key.pem 2048` (first-time setup; save as `EXTENSION_PEM_KEY` GitHub secret so extension ID stays stable across builds) |
 
 ## Release checklist (run after ANY change in extension/)

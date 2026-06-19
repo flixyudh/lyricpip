@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -86,12 +86,27 @@ jobs:
 
           rm -f "$KEY_FILE"
 
-      - name: Upload CRX as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: extension.crx
-          path: landing/dist/extension.crx
-          if-no-files-found: error
+      - name: Upload CRX to GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(python3 -c "import json; print(json.load(open('${{ github.workspace }}/extension/manifest.json'))['version'])")
+          TAG="crx-v$VERSION"
+
+          # Delete previous release with same tag if it exists
+          gh release view "$TAG" --json tagName --jq .tagName 2>/dev/null && \
+            gh release delete "$TAG" --yes --cleanup-tag 2>/dev/null || true
+
+          # Delete rolling 'latest' release too
+          gh release view latest --json tagName --jq .tagName 2>/dev/null && \
+            gh release delete latest --yes --cleanup-tag 2>/dev/null || true
+
+          gh release create latest \
+            --title "LyricPiP v$VERSION" \
+            --notes "Auto-built from commit ${{ github.sha }}" \
+            --target "${{ github.sha }}" \
+            "${{ github.workspace }}/landing/dist/extension.crx#LyricPiP-v$VERSION.crx"
 
       - uses: actions/upload-pages-artifact@v3
         with:
