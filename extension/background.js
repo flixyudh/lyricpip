@@ -66,7 +66,7 @@ async function lrcGet(path, params) {
 
 function scoreCandidate(c, duration, artist) {
   let s = 0;
-  if (c.syncedLyrics) s += 5;
+  if (c.syncedLyrics) s += 10;
   if (duration && c.duration && Math.abs(c.duration - duration) <= 7) s += 4;
   if (artist) {
     const a = norm(artist.split(',')[0]);

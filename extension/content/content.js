@@ -1,10 +1,10 @@
-/**
- * LyricPiP — main content script (isolated world)
- * - Receives track metadata + playback position from the MAIN-world script
- * - Fetches lyrics via the background service worker (LRCLIB)
- * - Renders a draggable on-page overlay with karaoke-style synced lyrics
- * - Opens a Document Picture-in-Picture window with the same synced view
- */
+  /**
+   * LyricPiP — main content script (isolated world)
+   * - Receives track metadata + playback position from the MAIN-world script
+   * - Fetches lyrics via the background service worker (LRCLIB)
+   * - Renders a draggable on-page overlay with karaoke-style synced lyrics
+   * - Opens a Document Picture-in-Picture window with the same synced view
+   */
 (() => {
   let VER = '';
   try { VER = chrome.runtime.getManifest().version; } catch (_e) { /* chrome.runtime may be unavailable in some contexts */ }
@@ -29,6 +29,7 @@
     pipWin: null,
     fetchTimer: null,
     fetchSeq: 0,
+    lastMediaSessionAt: 0,
   };
 
   /** Render targets: (optional) PiP window. */
@@ -90,6 +91,7 @@
     }
     if (targets.length > 0) updatePlayPauseIcon();
     if (p.meta && p.meta.title) {
+      state.lastMediaSessionAt = Date.now();
       const key = `${p.meta.title}|${p.meta.artist}`;
       if (key !== state.metaKey) {
         state.metaKey = key;
@@ -856,7 +858,7 @@
       return;
     }
     try {
-      const win = await window.documentPictureInPicture.requestWindow({ width: 420, height: 340 });
+      const win = await window.documentPictureInPicture.requestWindow({ width: 420, height: 340, title: 'LyricPiP' });
       state.pipWin = win;
       const doc = win.document;
       doc.title = 'LyricPiP';
@@ -1007,6 +1009,7 @@
   }
 
   setInterval(function () {
+    if (Date.now() - state.lastMediaSessionAt < 5000) return;
     const domMeta = detectDomMeta();
     if (domMeta) {
       const key = domMeta.title + '|' + domMeta.artist;
