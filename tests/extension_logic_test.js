@@ -38,7 +38,7 @@ function eq(a, b, msg) {
 
 // ---------- Load LRC parser in a sandboxed window ----------
 function loadParser() {
-  const code = fs.readFileSync(path.join('/app/extension/content/lrc-parser.js'), 'utf8');
+  const code = fs.readFileSync(path.join(__dirname, '..', 'extension', 'content', 'lrc-parser.js'), 'utf8');
   const sandbox = { window: {} };
   vm.createContext(sandbox);
   vm.runInContext(code, sandbox);
@@ -47,7 +47,7 @@ function loadParser() {
 
 // ---------- Load cleanTitle + cleanArtist by extracting from content.js ----------
 function loadCleanTitle() {
-  const src = fs.readFileSync('/app/extension/content/content.js', 'utf8');
+  const src = fs.readFileSync(path.join(__dirname, '..', 'extension', 'content', 'content.js'), 'utf8');
   // Slice between NOISE_RE declaration and buildQueries definition.
   const startIdx = src.indexOf('const NOISE_RE');
   const endIdx = src.indexOf('function buildQueries');
@@ -61,7 +61,7 @@ function loadCleanTitle() {
 
 // ---------- Load scoreCandidate + pickBest from background.js ----------
 function loadBackgroundFns() {
-  const src = fs.readFileSync('/app/extension/background.js', 'utf8');
+  const src = fs.readFileSync(path.join(__dirname, '..', 'extension', 'background.js'), 'utf8');
   // We need: norm, scoreCandidate, pickBest. Extract by slicing function blocks.
   const need = ['function norm', 'function scoreCandidate', 'function pickBest'];
   let snippet = '';
@@ -120,13 +120,13 @@ function loadBackgroundFns() {
     eq(LRC.parse('no lyrics here'), null);
   });
 
-  await test('indexAt: binary search returns active line', () => {
+  await test('indexAtSmooth: binary search returns active line with no anticipation', () => {
     const lines = LRC.parse('[00:01.00]A\n[00:05.00]B\n[00:10.00]C');
-    eq(LRC.indexAt(lines, 0), -1);
-    eq(LRC.indexAt(lines, 1.0), 0);
-    eq(LRC.indexAt(lines, 4.99), 0);
-    eq(LRC.indexAt(lines, 5.0), 1);
-    eq(LRC.indexAt(lines, 99), 2);
+    eq(LRC.indexAtSmooth(lines, 0, 0).index, -1);
+    eq(LRC.indexAtSmooth(lines, 1.0, 0).index, 0);
+    eq(LRC.indexAtSmooth(lines, 4.99, 0).index, 0);
+    eq(LRC.indexAtSmooth(lines, 5.0, 0).index, 1);
+    eq(LRC.indexAtSmooth(lines, 99, 0).index, 2);
   });
 
   await test('indexAtSmooth: anticipatory active line with progress', () => {
@@ -149,6 +149,32 @@ function loadBackgroundFns() {
     const r6 = LRC.indexAtSmooth(lines, 99, 0.3);
     eq(r6.index, 2);
     eq(r6.progress, 1);
+  });
+
+  await test('indexAtSmooth: empty array returns -1', () => {
+    const r = LRC.indexAtSmooth([], 5, 0.3);
+    eq(r.index, -1);
+    eq(r.progress, 1);
+  });
+
+  await test('indexAtSmooth: single line', () => {
+    const lines = LRC.parse('[00:05.00]Only');
+    eq(LRC.indexAtSmooth(lines, 4.8, 0.5).index, 0);
+    eq(LRC.indexAtSmooth(lines, 6, 0.3).index, 0);
+  });
+
+  await test('indexAtSmooth: all lines in past', () => {
+    const lines = LRC.parse('[00:01.00]A\n[00:02.00]B');
+    const r = LRC.indexAtSmooth(lines, 10, 0.3);
+    eq(r.index, 1);
+    eq(r.progress, 1);
+  });
+
+  await test('indexAtSmooth: zero anticipation disables progress', () => {
+    const lines = LRC.parse('[00:01.00]A\n[00:05.00]B');
+    const r = LRC.indexAtSmooth(lines, 4.85, 0);
+    eq(r.index, 0);
+    eq(r.progress, 1);
   });
 
   // ===== cleanTitle =====

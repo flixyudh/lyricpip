@@ -23,7 +23,7 @@ through the extension and why each piece exists.
 │  ┌──────────────────────────┐   │ • Document PiP window       │    │
 │  │ lrc-parser.js (ISOLATED) │◄──│   (lyrics + media controls  │    │
 │  │ window.LyricPiPLRC       │   │    + settings panel)        │    │
-│  │ .parse() / .indexAt()    │   │ • rAF sync loop             │    │
+│  │ .parse() / .indexAtSmooth() │   │ • rAF sync loop             │    │
 │  └──────────────────────────┘   │ • popup message handler     │    │
 │                                 │ • DOM metadata fallback     │    │
 │                                 └──────────┬──────────────────┘    │
@@ -113,10 +113,10 @@ A `requestAnimationFrame` loop in content.js (`tick()` / `startSyncLoop()`):
 2. Compute position via `nowSeconds()`: prefer media-element snapshot
    `current + (now − snapshotAt)/1000 × playbackRate` (frozen when paused); else Spotify DOM clock
    `[data-testid="playback-position"]` parsed + interpolated.
-3. `idx = LyricPiPLRC.indexAt(lines, position + userOffset)` (binary search, −1 before first line).
-4. `progress = LyricPiPLRC.indexAtSmooth(lines, position + userOffset)` — fractional 0…1 within
-   the active line for per-frame karaoke highlighting.
-5. If `idx` changed → `setActiveLine()` on **every render target**.
+3. `result = LyricPiPLRC.indexAtSmooth(lines, position + userOffset, ANIMATE_DURATION)`
+   — returns `{ index, progress }` via O(log n) binary search. Progress is 0…1 within the
+   active line for per-frame karaoke highlighting.
+4. If `result.index` changed → `setActiveLine()` on **every render target**.
 
 Media time is provided by `main-world.js` every 100ms via `window.postMessage`. The sync engine
 also starts immediately when synced lyrics are loaded (`startSyncLoop()` called from
