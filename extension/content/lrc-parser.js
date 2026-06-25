@@ -38,50 +38,38 @@
     return lines;
   }
 
-  /** Binary search: index of the active line at time t (or -1 before first line). */
-  function indexAt(lines, t) {
-    if (!lines || lines.length === 0) return -1;
-    let lo = 0;
-    let hi = lines.length - 1;
-    let ans = -1;
-    while (lo <= hi) {
-      const mid = (lo + hi) >> 1;
-      if (lines[mid].time <= t) {
-        ans = mid;
-        lo = mid + 1;
-      } else {
-        hi = mid - 1;
-      }
-    }
-    return ans;
-  }
-
   /**
    * Anticipatory active-line detection with transition progress.
-   * Mirrors the sync logic in mantou132/spotify-lyrics canvas renderer:
-   * the upcoming line becomes the "active" line animateDuration seconds
-   * before its timestamp, with progress 0..1 reaching 1 at startTime.
+   * Uses binary search (O(log n)) to find the current line, then checks the
+   * next line for anticipation — the upcoming line becomes "active"
+   * animateDuration seconds before its timestamp, with progress 0..1.
    */
   function indexAtSmooth(lines, t, animateDuration) {
-    const duration = typeof animateDuration === 'number' && animateDuration > 0
-      ? animateDuration
-      : 0;
     if (!lines || lines.length === 0) return { index: -1, progress: 1 };
-    let currentIndex = -1;
-    let progress = 1;
-    for (let i = 0; i < lines.length; i++) {
-      const startTime = lines[i].time;
-      if (typeof startTime === 'number' && !Number.isNaN(startTime) && t > startTime - duration) {
-        currentIndex = i;
-        if (t < startTime) {
-          progress = (t - startTime + duration) / duration;
-        } else {
-          progress = 1;
+    const dur = animateDuration > 0 ? animateDuration : 0;
+
+    // Binary search for the last line whose time <= t.
+    let idx = -1;
+    let lo = 0, hi = lines.length - 1;
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      if (lines[mid].time <= t) { idx = mid; lo = mid + 1; }
+      else { hi = mid - 1; }
+    }
+
+    // Check if the next line is within the anticipation window.
+    if (dur > 0) {
+      const nextIdx = idx + 1;
+      if (nextIdx < lines.length && t > lines[nextIdx].time - dur) {
+        if (t < lines[nextIdx].time) {
+          return { index: nextIdx, progress: (t - lines[nextIdx].time + dur) / dur };
         }
+        return { index: nextIdx, progress: 1 };
       }
     }
-    return { index: currentIndex, progress };
+
+    return { index: idx, progress: 1 };
   }
 
-  window.LyricPiPLRC = { parse, indexAt, indexAtSmooth };
+  window.LyricPiPLRC = { parse, indexAtSmooth };
 })();

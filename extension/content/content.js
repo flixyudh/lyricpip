@@ -30,6 +30,7 @@
     fetchTimer: null,
     fetchSeq: 0,
     lastMediaSessionAt: 0,
+    lastFetchTitle: null,
   };
 
   /** Render targets: (optional) PiP window. */
@@ -96,7 +97,11 @@
       if (key !== state.metaKey) {
         state.metaKey = key;
         state.meta = p.meta;
-        onTrackChange();
+        // Only trigger a full re-fetch if the title actually changed.
+        // Artist/album fluctuation on Spotify mediaSession should not reset lyrics.
+        if (p.meta.title !== state.lastFetchTitle) {
+          onTrackChange();
+        }
       }
     }
   }
@@ -241,6 +246,7 @@
     state.activeIdx = -2;
     state.time = { current: null, duration: null, paused: true, rate: 1, at: 0 };
     state.spotifyDom = { sec: null, at: 0, paused: true };
+    state.lastFetchTitle = (state.meta && state.meta.title) || null;
     renderAllTargets();
     clearTimeout(state.fetchTimer);
     state.fetchTimer = setTimeout(fetchLyricsNow, 900);
@@ -310,24 +316,11 @@
   // ============================================================
   let syncRafId = null;
 
-  function shouldSync() {
-    if (state.lyrics.status !== 'synced') return false;
-    const pipVisible = state.pipWin && !state.pipWin.closed;
-    return pipVisible;
-  }
-
   function startSyncLoop() {
     if (syncRafId) return;
-    if (!shouldSync()) return;
+    if (state.lyrics.status !== 'synced') return;
     console.debug('[LyricPiP:content] sync loop started');
     tick();
-  }
-
-  function stopSyncLoop() {
-    if (syncRafId) {
-      cancelAnimationFrame(syncRafId);
-      syncRafId = null;
-    }
   }
 
   function isPlaybackPaused() {
@@ -343,7 +336,7 @@
 
     const t = nowSeconds();
     if (t === null) {
-      if (shouldSync()) syncRafId = requestAnimationFrame(tick);
+      syncRafId = requestAnimationFrame(tick);
       return;
     }
 
@@ -357,27 +350,22 @@
       if (idxChanged) {
         console.debug('[LyricPiP:content] line change idx=' + idx + ' progress=' + progress.toFixed(2) + ' t=' + t.toFixed(2) + ' adjusted=' + adjusted.toFixed(2) + ' offset=' + state.offset.toFixed(1));
       }
-      for (const target of targets) setActiveLine(target, idx, progress, idxChanged ? 'smooth' : false);
+      if (targets.length > 0) {
+        for (const target of targets) setActiveLine(target, idx, progress, idxChanged ? 'smooth' : false);
+      }
     }
 
-    if (shouldSync()) {
-      syncRafId = requestAnimationFrame(tick);
-    } else {
-      console.debug('[LyricPiP:content] sync loop stopped (overlay/PiP hidden)');
-    }
+    syncRafId = requestAnimationFrame(tick);
   }
 
   // ============================================================
   // Rendering (shared by overlay + PiP)
   // ============================================================
   const ICONS = {
-    pip: '<svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><rect x="12" y="12" width="8" height="6" rx="1" fill="currentColor" stroke="none"/></svg>',
     sun: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
     moon: '<svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></svg>',
     minus: '<svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg>',
     plus: '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
-    chevronDown: '<svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>',
-    close: '<svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>',
     play: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="8,5 19,12 8,19" stroke-linejoin="round"/></svg>',
     pause: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="6" y="4" width="4" height="16" rx="0.5"/><rect x="14" y="4" width="4" height="16" rx="0.5"/></svg>',
     prev: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="17,5 7,12 17,19" stroke-linejoin="round"/><rect x="5" y="4" width="2" height="16" rx="0.5"/></svg>',
@@ -619,7 +607,7 @@
   }
 
   function buildChrome(doc, root) {
-    const target = { doc, isPip: true };
+    const target = { doc };
 
     const header = doc.createElement('div');
     header.className = 'lpp-header';
@@ -647,6 +635,7 @@
     const controls = doc.createElement('div');
     controls.className = 'lpp-controls';
     const themeBtn = btn(doc, state.theme === 'dark' ? 'sun' : 'moon', 'Toggle theme', 'pip-theme-toggle', toggleTheme);
+    target.themeBtn = themeBtn;
     controls.appendChild(themeBtn);
     const gearBtn = btn(doc, 'gear', 'Settings', 'pip-settings-toggle', () => {
       const panel = root.querySelector('.lpp-settings-panel');
@@ -745,38 +734,6 @@
     root.appendChild(footer);
 
     return target;
-  }
-
-  function makeDraggable(el, handle) {
-    let startX = 0;
-    let startY = 0;
-    let origX = 0;
-    let origY = 0;
-    let dragging = false;
-
-    handle.addEventListener('pointerdown', (e) => {
-      if (e.target.closest('.lpp-btn')) return;
-      dragging = true;
-      startX = e.clientX;
-      startY = e.clientY;
-      const rect = el.getBoundingClientRect();
-      origX = rect.left;
-      origY = rect.top;
-      handle.setPointerCapture(e.pointerId);
-      e.preventDefault();
-    });
-    handle.addEventListener('pointermove', (e) => {
-      if (!dragging) return;
-      const x = Math.min(Math.max(0, origX + e.clientX - startX), window.innerWidth - el.offsetWidth);
-      const y = Math.min(Math.max(0, origY + e.clientY - startY), window.innerHeight - el.offsetHeight);
-      el.style.left = `${x}px`;
-      el.style.top = `${y}px`;
-      el.style.right = 'auto';
-      el.style.bottom = 'auto';
-    });
-    handle.addEventListener('pointerup', () => {
-      dragging = false;
-    });
   }
 
   // ============================================================
@@ -1011,13 +968,10 @@
   setInterval(function () {
     if (Date.now() - state.lastMediaSessionAt < 5000) return;
     const domMeta = detectDomMeta();
-    if (domMeta) {
-      const key = domMeta.title + '|' + domMeta.artist;
-      if (key !== state.metaKey) {
-        state.metaKey = key;
-        state.meta = domMeta;
-        onTrackChange();
-      }
+    if (domMeta && domMeta.title && domMeta.title !== state.lastFetchTitle) {
+      state.metaKey = domMeta.title + '|' + domMeta.artist;
+      state.meta = domMeta;
+      onTrackChange();
     }
   }, 2000);
 
