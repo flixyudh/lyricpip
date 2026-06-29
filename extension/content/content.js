@@ -88,7 +88,10 @@
         rate: p.playbackRate || 1,
         at: Date.now(),
       };
-      if (state.lyrics.status === 'synced' && !state.time.paused) startSyncLoop();
+      if (state.lyrics.status === 'synced') {
+        if (!state.time.paused) startSyncLoop();
+        syncDisplay();
+      }
     }
     if (targets.length > 0) updatePlayPauseIcon();
     if (p.meta && p.meta.title) {
@@ -156,24 +159,26 @@
    *  the media-snapshot source (main-world.js) may have stopped sending updates. */
   function nowSeconds() {
     const t = state.time;
+    // Fresh media-element snapshot (<2s old) — trust paused flag.
     if (t.current !== null) {
       const elapsed = Date.now() - t.at;
-      // State is fresh — use interpolated media-element time.
       if (elapsed < 2000) {
         if (t.paused) return t.current;
         return t.current + (elapsed / 1000) * (t.rate || 1);
       }
-      // Stale snapshot — let DOM fallback override if available.
     }
+    // Spotify DOM clock — refreshed every tick, trust its paused flag.
     const d = state.spotifyDom;
     if (d.sec !== null) {
       if (d.paused) return d.sec;
       return d.sec + (Date.now() - d.at) / 1000;
     }
-    // Last resort: use stale time even if old.
+    // Last resort: stale media-snapshot. Always interpolate — paused
+    // may itself be stale (main-world.js can't find a media element).
     if (t.current !== null) {
-      if (t.paused) return t.current;
-      return t.current + ((Date.now() - t.at) / 1000) * (t.rate || 1);
+      if (!t.paused) return t.current + ((Date.now() - t.at) / 1000) * (t.rate || 1);
+      // Stale + paused: interpolate anyway — a drifting clock beats a frozen one.
+      return t.current + ((Date.now() - t.at) / 1000);
     }
     return null;
   }
@@ -293,13 +298,8 @@
     } else {
       const synced = result.syncedLyrics ? LRC.parse(result.syncedLyrics) : null;
       if (synced && synced.length) {
-        console.debug('[LyricPiP:content] lyrics synced ' + synced.length + ' lines');
-        if (synced.length >= 1) console.debug('[LyricPiP:content] first line time=' + synced[0].time + ' text=' + (synced[0].text || '').slice(0, 40));
-        if (synced.length >= 2) console.debug('[LyricPiP:content] second line time=' + synced[1].time + ' text=' + (synced[1].text || '').slice(0, 40));
-        if (synced.length >= 3) console.debug('[LyricPiP:content] third line time=' + synced[2].time + ' text=' + (synced[2].text || '').slice(0, 40));
         state.lyrics = { status: 'synced', synced, plain: result.plainLyrics, source: result };
       } else if (result.plainLyrics) {
-        console.debug('[LyricPiP:content] lyrics plain only');
         state.lyrics = { status: 'plain', synced: null, plain: result.plainLyrics, source: result };
       } else {
         state.lyrics = { status: 'notfound', synced: null, plain: null, source: null };
@@ -312,15 +312,28 @@
   }
 
   // ============================================================
-  // Sync engine (requestAnimationFrame, anticipatory line detection)
+  // Sync engine (setInterval + rAF hybrid, anticipatory line detection)
   // ============================================================
+  let syncIntervalId = null;
   let syncRafId = null;
+  let lastTickAt = 0;
 
   function startSyncLoop() {
-    if (syncRafId) return;
+    if (syncIntervalId) return;
     if (state.lyrics.status !== 'synced') return;
-    console.debug('[LyricPiP:content] sync loop started');
-    tick();
+    syncIntervalId = setInterval(syncTick, 100);
+    syncTick();
+  }
+
+  function stopSyncLoop() {
+    if (syncIntervalId) {
+      clearInterval(syncIntervalId);
+      syncIntervalId = null;
+    }
+    if (syncRafId) {
+      cancelAnimationFrame(syncRafId);
+      syncRafId = null;
+    }
   }
 
   function isPlaybackPaused() {
@@ -329,14 +342,16 @@
     return true;
   }
 
-  function tick() {
-    syncRafId = null;
-    if (state.lyrics.status !== 'synced') return;
+  function syncTick() {
+    if (state.lyrics.status !== 'synced') {
+      stopSyncLoop();
+      return;
+    }
     if (PLATFORM === 'spotify') readSpotifyDom();
 
     const t = nowSeconds();
     if (t === null) {
-      syncRafId = requestAnimationFrame(tick);
+      scheduleRafTick();
       return;
     }
 
@@ -347,15 +362,37 @@
       const idxChanged = idx !== state.activeIdx;
       state.activeIdx = idx;
       state.activeProgress = progress;
-      if (idxChanged) {
-        console.debug('[LyricPiP:content] line change idx=' + idx + ' progress=' + progress.toFixed(2) + ' t=' + t.toFixed(2) + ' adjusted=' + adjusted.toFixed(2) + ' offset=' + state.offset.toFixed(1));
-      }
+      lastTickAt = Date.now();
       if (targets.length > 0) {
         for (const target of targets) setActiveLine(target, idx, progress, idxChanged ? 'smooth' : false);
       }
     }
 
-    syncRafId = requestAnimationFrame(tick);
+    scheduleRafTick();
+  }
+
+  function scheduleRafTick() {
+    if (syncRafId) return;
+    syncRafId = requestAnimationFrame(function onRaf() {
+      syncRafId = null;
+      syncTick();
+    });
+  }
+
+  function syncDisplay() {
+    if (state.lyrics.status !== 'synced' || targets.length === 0) return;
+    if (PLATFORM === 'spotify') readSpotifyDom();
+    const t = nowSeconds();
+    if (t === null) return;
+    const adjusted = t + state.offset;
+    const { index: idx, progress } = LRC.indexAtSmooth(state.lyrics.synced, adjusted, 0.3);
+    if (idx !== state.activeIdx || Math.abs(progress - state.activeProgress) > 0.01) {
+      const idxChanged = idx !== state.activeIdx;
+      state.activeIdx = idx;
+      state.activeProgress = progress;
+      lastTickAt = Date.now();
+      for (const target of targets) setActiveLine(target, idx, progress, idxChanged ? 'smooth' : false);
+    }
   }
 
   // ============================================================
@@ -892,6 +929,12 @@
           theme: state.theme,
           fontSize: state.fontSize,
           fontAlign: state.fontAlign,
+          debug: {
+            activeIdx: state.activeIdx,
+            activeProgress: state.activeProgress,
+            currentTime: nowSeconds(),
+            syncLoopRunning: syncIntervalId !== null,
+          },
         });
         return false;
       }
@@ -917,10 +960,35 @@
         return false;
       }
       case 'RESYNC': {
-        console.debug('[LyricPiP:content] manual resync requested');
         onTrackChange();
         sendResponse({ ok: true });
         return false;
+      }
+      case 'TOGGLE_PIP': {
+        (async function () {
+          if (state.pipWin && !state.pipWin.closed) {
+            state.pipWin.close();
+            state.pipWin = null;
+            sendResponse({ ok: true, action: 'closed' });
+          } else {
+            ensurePipButton();
+            try {
+              await openPip();
+              sendResponse({ ok: true, action: 'opened' });
+            } catch (_err) {
+              if (pipBtn) {
+                pipBtn.style.transform = 'scale(1.15)';
+                pipBtn.style.opacity = '1';
+                setTimeout(function () {
+                  pipBtn.style.transform = 'scale(1)';
+                  pipBtn.style.opacity = '0.6';
+                }, 600);
+              }
+              sendResponse({ ok: true, action: 'blocked' });
+            }
+          }
+        })();
+        return true;
       }
       default:
         return false;

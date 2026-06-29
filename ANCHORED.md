@@ -119,12 +119,13 @@ Full details: `ARCHITECTURE.md`.
 | YouTube Music not supported | `music.youtube.com` not in manifest content_scripts matches | Not yet added; use `www.youtube.com` instead. |
 | Tab-hide breaks sync + scrolls to top | Returning to a hidden tab: `state.time` goes stale (main-world rAF paused), `nowSeconds()` interpolates wildly; `applyLyricsResult` renders at `activeIdx=-2` which scrolls to top, but `state.time` was cleared by `onTrackChange()` so `tick()` cant fix it | `nowSeconds()` falls through to DOM clock when media snapshot is >2 s stale; `setActiveLine` only scrolls to top on `idx === -1` (sync-confirmed before-first-line), not uninitialized `idx < -1`. (Fixed) |
 | findActiveMedia() bounces between videos | Multiple `<video>` elements (ads, previews, main content) returned different elements on each poll → `currentTime` jumps erratically | Prefer the element with the longest `duration` to reliably identify the main video. (Fixed in v1.2.0) |
+| PiP sync freezes in background tabs | Pure `requestAnimationFrame` chain breaks silently when the tab is throttled/backgrounded, killing the sync loop permanently (no recovery mechanism). | Replaced rAF-only loop with hybrid `setInterval` (100ms backbone) + `rAF` (smooth frame-by-frame). `syncTick()` kills both timers cleanly on track change. `syncDisplay()` hooks into `handleMediaState` for direct PiP updates. (Fixed in v1.1.5) |
 
 ---
 
 ## 6. Current state & where to go next
 
-- **Version**: 1.2.0 (see `extension/manifest.json`)
+- **Version**: 1.1.5 (see `extension/manifest.json`)
   - Added floating PiP trigger button (bottom-right of any supported page)
   - Added media controls (prev/play-pause/next) inside PiP window
   - Added settings panel in PiP (font-size ±2, alignment L/C/R) via gear toggle

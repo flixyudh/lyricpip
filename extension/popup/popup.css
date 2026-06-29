@@ -31,6 +31,7 @@ body {
   background: var(--bg);
   color: var(--text);
   transition: background-color 0.3s ease, color 0.3s ease;
+  overflow: hidden;
 }
 
 .popup {
@@ -49,6 +50,13 @@ body {
   justify-content: space-between;
   padding: 14px 16px;
   border-bottom: 1px solid var(--border);
+  position: relative;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
 }
 
 .brand {
@@ -285,37 +293,11 @@ body {
   border-radius: 4px;
 }
 
-/* Settings gear + popover */
-.settings-bar {
-  position: relative;
-  text-align: right;
-  margin-top: 8px;
-}
-
-.gear-btn {
-  all: initial;
-  font-family: inherit;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 7px;
-  cursor: pointer;
-  font-size: 15px;
-  color: var(--muted);
-  transition: color 0.2s ease, background-color 0.2s ease;
-}
-
-.gear-btn:hover {
-  color: var(--text-secondary);
-  background: var(--surface-hover);
-}
-
+/* Settings popover (in header) */
 .settings-popover {
   position: absolute;
-  bottom: calc(100% + 4px);
-  right: 0;
+  top: calc(100% + 4px);
+  right: 8px;
   width: 220px;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -444,32 +426,56 @@ body {
 }
 
 .debug-content {
-  padding: 8px 12px;
+  padding: 6px 8px;
   background: rgba(0,0,0,0.15);
 }
 
-.debug-row {
+.debug-header-row {
   display: flex;
+  align-items: center;
   gap: 6px;
-  margin-bottom: 3px;
+  margin-bottom: 4px;
 }
 
 .debug-label {
   color: var(--muted);
-  min-width: 80px;
   flex-shrink: 0;
+  font-size: 10px;
 }
 
 .debug-value {
   color: var(--text-secondary);
-  word-break: break-all;
   font-family: monospace;
   font-size: 10px;
+  flex: 1;
 }
 
-.debug-error {
-  color: #ef4444;
+.debug-btn-small {
+  flex: 0 0 auto;
+  font-size: 9px;
+  padding: 2px 6px;
 }
+
+.debug-log {
+  background: rgba(0,0,0,0.25);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-secondary);
+  font-family: 'SF Mono', 'Fira Code', 'Fira Mono', Menlo, Consolas, monospace;
+  font-size: 9.5px;
+  line-height: 1.55;
+  padding: 6px 8px;
+  margin: 0 0 6px 0;
+  max-height: 200px;
+  overflow-y: auto;
+  white-space: pre;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--muted) transparent;
+}
+
+.debug-log::-webkit-scrollbar { width: 4px; height: 4px; }
+.debug-log::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 2px; }
 
 .debug-actions {
   display: flex;

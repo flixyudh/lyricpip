@@ -21,9 +21,8 @@ var els = {
   debugToggle: document.getElementById('debug-toggle'),
   debugContent: document.getElementById('debug-content'),
   debugTabId: document.getElementById('debug-tab-id'),
-  debugMessage: document.getElementById('debug-message'),
-  debugLastError: document.getElementById('debug-last-error'),
-  debugResponse: document.getElementById('debug-response'),
+  debugLog: document.getElementById('debug-log'),
+  debugClear: document.getElementById('debug-clear'),
   debugRetry: document.getElementById('debug-retry'),
   debugInject: document.getElementById('debug-inject'),
   settingsGear: document.getElementById('settings-gear'),
@@ -36,6 +35,7 @@ var els = {
 
 var activeTabId = null;
 var theme = 'dark';
+var MAX_LOG_LINES = 200;
 
 var STATUS_LABELS = {
   idle: 'Waiting',
@@ -73,13 +73,20 @@ function sendToTab(message) {
   });
 }
 
-function setDebug(field, value) {
-  switch (field) {
-    case 'tabId': els.debugTabId.textContent = value; break;
-    case 'message': els.debugMessage.textContent = value; break;
-    case 'lastError': els.debugLastError.textContent = value; break;
-    case 'response': els.debugResponse.textContent = value; break;
-  }
+function ts() {
+  var d = new Date();
+  return d.getHours().toString().padStart(2, '0') + ':' +
+    d.getMinutes().toString().padStart(2, '0') + ':' +
+    d.getSeconds().toString().padStart(2, '0');
+}
+
+function appendLog(text) {
+  if (!els.debugLog) return;
+  var lines = els.debugLog.textContent ? els.debugLog.textContent.split('\n') : [];
+  lines.push('[' + ts() + '] ' + text);
+  while (lines.length > MAX_LOG_LINES) lines.shift();
+  els.debugLog.textContent = lines.join('\n');
+  els.debugLog.scrollTop = els.debugLog.scrollHeight;
 }
 
 function showUnsupported() {
@@ -88,6 +95,7 @@ function showUnsupported() {
 }
 
 var _prevStateKey = '';
+var _prevDebugKey = '';
 
 function renderState(s) {
   els.unsupported.classList.add('hidden');
@@ -109,7 +117,6 @@ function renderState(s) {
 
   var newKey = (s.meta ? s.meta.title + '|' + s.meta.artist + '|' : '') + s.lyricsStatus + '|' + s.currentLine;
   if (newKey !== _prevStateKey) {
-    console.debug('[LyricPiP:popup] state: ' + s.lyricsStatus + ' platform=' + s.platform + ' line=' + (s.currentLine ? s.currentLine.slice(0, 30) : 'null'));
     _prevStateKey = newKey;
   }
 
@@ -125,6 +132,23 @@ function renderState(s) {
 
   var off = typeof s.offset === 'number' ? s.offset : 0;
   els.offsetValue.textContent = (off >= 0 ? '+' : '') + off.toFixed(1) + 's';
+
+  // Runtime debug log
+  if (s.debug) {
+    var debugKey = s.debug.activeIdx + '|' + s.debug.activeProgress.toFixed(2) + '|' +
+      (s.debug.currentTime !== null ? s.debug.currentTime.toFixed(1) : 'null') + '|' +
+      s.debug.syncLoopRunning + '|' + s.lyricsStatus;
+    if (debugKey !== _prevDebugKey) {
+      _prevDebugKey = debugKey;
+      var line = 'line=' + s.debug.activeIdx +
+        ' prog=' + s.debug.activeProgress.toFixed(3) +
+        ' t=' + (s.debug.currentTime !== null ? s.debug.currentTime.toFixed(2) + 's' : 'null') +
+        ' off=' + (off >= 0 ? '+' : '') + off.toFixed(1) + 's' +
+        ' sync=' + (s.debug.syncLoopRunning ? 'on' : 'off') +
+        ' status=' + s.lyricsStatus;
+      appendLog(line);
+    }
+  }
 }
 
 var _settings = { fontSize: 20, fontAlign: 'center' };
@@ -154,8 +178,7 @@ els.settingsPopover.addEventListener('click', function (e) {
 
 function injectContentScript() {
   if (activeTabId === null) return;
-  console.debug('[LyricPiP:popup] injecting content scripts into tab ' + activeTabId);
-  setDebug('message', 'injecting...');
+  appendLog('injecting content scripts...');
   Promise.all([
     chrome.scripting.executeScript({
       target: { tabId: activeTabId },
@@ -167,12 +190,10 @@ function injectContentScript() {
       world: 'MAIN',
     }),
   ]).then(function () {
-    console.debug('[LyricPiP:popup] injection ok');
-    setDebug('message', 'injection ok');
+    appendLog('injection ok');
     setTimeout(refresh, 500);
   }).catch(function (err) {
-    console.warn('[LyricPiP:popup] injection failed:', err.message);
-    setDebug('lastError', 'inject: ' + err.message);
+    appendLog('ERR injection: ' + err.message);
   });
 }
 
@@ -205,9 +226,12 @@ els.debugToggle.addEventListener('click', function () {
   els.debugToggle.textContent = hidden ? '\u2699 Debug' : '\u2699 Hide debug';
 });
 
+els.debugClear.addEventListener('click', function () {
+  if (els.debugLog) els.debugLog.textContent = '';
+});
+
 els.debugRetry.addEventListener('click', function () {
-  setDebug('lastError', '\u2014');
-  setDebug('response', '\u2014');
+  appendLog('manual retry GET_STATE');
   refresh();
 });
 
@@ -251,18 +275,34 @@ els.alignBtns.forEach(function (btn) {
 
 // Resync
 document.getElementById('resync-btn').addEventListener('click', function () {
+  appendLog('resync requested');
   sendToTab({ type: 'RESYNC' });
   refresh();
 });
 
 document.addEventListener('keydown', function (e) {
-  if (e.key.toLowerCase() === 'd') {
-    e.preventDefault();
-    els.debugSection.classList.toggle('hidden');
-    if (els.debugContent.classList.contains('hidden')) {
-      els.debugContent.classList.remove('hidden');
-      els.debugToggle.textContent = '\u2699 Hide debug';
-    }
+  var tag = (e.target && e.target.tagName) || '';
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target && e.target.isContentEditable)) return;
+  switch (e.key.toLowerCase()) {
+    case 'd':
+      e.preventDefault();
+      els.debugSection.classList.remove('hidden');
+      var hidden = els.debugContent.classList.toggle('hidden');
+      els.debugToggle.textContent = hidden ? '\u2699 Debug' : '\u2699 Hide debug';
+      break;
+    case 'j':
+      e.preventDefault();
+      sendToTab({ type: 'TOGGLE_PIP' }).then(function (r) {
+        if (!r) return;
+        if (r.action === 'opened' || r.action === 'closed') {
+          appendLog('PiP ' + r.action);
+          refresh();
+        } else {
+          // PiP blocked (needs page gesture) — close popup, animate button on page
+          window.close();
+        }
+      });
+      break;
   }
 });
 
@@ -270,39 +310,37 @@ function boot() {
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     var tab = tabs && tabs[0];
     if (!tab) {
-      console.warn('[LyricPiP:popup] no active tab found');
       showUnsupported();
-      setDebug('tabId', 'none');
+      els.debugTabId.textContent = 'none';
+      appendLog('ERR no active tab');
       return;
     }
     activeTabId = tab.id;
-    setDebug('tabId', String(tab.id));
-    console.debug('[LyricPiP:popup] boot tab=' + tab.id);
+    els.debugTabId.textContent = String(tab.id);
+    appendLog('boot tab=' + tab.id);
 
     // Try GET_STATE immediately, then retry with injection if needed
     sendToTab({ type: 'GET_STATE' }).then(function firstTry(state) {
       if (state && state.ok) {
+        appendLog('GET_STATE ok platform=' + state.platform + ' status=' + state.lyricsStatus);
         renderState(state);
         renderSettings(state);
         startPolling();
         return;
       }
       showUnsupported();
-      setDebug('lastError', 'content script unresponsive');
-      console.debug('[LyricPiP:popup] first GET_STATE failed, trying injection...');
-      setDebug('message', 'first fail, injecting...');
+      appendLog('GET_STATE fail (content script unresponsive), injecting...');
       injectContentScript();
       // After injection attempt, wait and retry once more
       setTimeout(function () {
         sendToTab({ type: 'GET_STATE' }).then(function secondTry(s2) {
           if (s2 && s2.ok) {
-            console.debug('[LyricPiP:popup] injection recovery worked');
+            appendLog('injection recovery ok');
             renderState(s2);
             renderSettings(s2);
             startPolling();
           } else {
-            console.debug('[LyricPiP:popup] injection recovery failed, showing unsupported');
-            setDebug('message', 'injection did not help');
+            appendLog('ERR injection recovery failed');
           }
         });
       }, 1500);

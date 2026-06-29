@@ -15,7 +15,30 @@
         </div>
         <div class="brand-name">LyricPiP</div>
       </div>
-      <button id="theme-toggle" class="icon-btn" title="Toggle theme" data-testid="popup-theme-toggle"></button>
+      <div class="header-actions">
+        <button id="theme-toggle" class="icon-btn" title="Toggle theme" data-testid="popup-theme-toggle"></button>
+        <button id="settings-gear" class="icon-btn" title="Settings" data-testid="settings-gear">&#9881;</button>
+      </div>
+      <div id="settings-popover" class="settings-popover hidden" data-testid="settings-popover">
+        <div class="setting-row">
+          <span class="setting-label">Font size</span>
+          <div class="setting-control">
+            <button class="icon-btn" id="font-size-minus" title="Smaller">&minus;</button>
+            <span id="font-size-value" class="setting-value">15</span>
+            <button class="icon-btn" id="font-size-plus" title="Larger">+</button>
+          </div>
+        </div>
+        <div class="setting-row">
+          <span class="setting-label">Alignment</span>
+          <div class="align-group">
+            <button class="align-btn" data-align="left" data-testid="align-left">L</button>
+            <button class="align-btn" data-align="center" data-testid="align-center">C</button>
+            <button class="align-btn" data-align="right" data-testid="align-right">R</button>
+          </div>
+        </div>
+        <div class="setting-divider"></div>
+        <button id="resync-btn" class="resync-btn" data-testid="resync-btn">&#x21bb; Re-fetch lyrics</button>
+      </div>
     </header>
 
     <section id="unsupported" class="panel hidden" data-testid="unsupported-panel">
@@ -51,31 +74,7 @@
       </div>
 
       <div class="shortcuts-hint" data-testid="shortcuts-hint">
-        <strong>Shortcuts:</strong> <kbd>J</kbd> PiP (on page) &middot; <kbd>D</kbd> debug
-      </div>
-
-      <div class="settings-bar">
-        <button id="settings-gear" class="gear-btn" title="Settings" data-testid="settings-gear">&#9881;</button>
-        <div id="settings-popover" class="settings-popover hidden" data-testid="settings-popover">
-          <div class="setting-row">
-            <span class="setting-label">Font size</span>
-            <div class="setting-control">
-              <button class="icon-btn" id="font-size-minus" title="Smaller">&minus;</button>
-              <span id="font-size-value" class="setting-value">15</span>
-              <button class="icon-btn" id="font-size-plus" title="Larger">+</button>
-            </div>
-          </div>
-          <div class="setting-row">
-            <span class="setting-label">Alignment</span>
-            <div class="align-group">
-              <button class="align-btn" data-align="left" data-testid="align-left">L</button>
-              <button class="align-btn" data-align="center" data-testid="align-center">C</button>
-              <button class="align-btn" data-align="right" data-testid="align-right">R</button>
-            </div>
-          </div>
-          <div class="setting-divider"></div>
-          <button id="resync-btn" class="resync-btn" data-testid="resync-btn">&#x21bb; Re-fetch lyrics</button>
-        </div>
+        <strong>Shortcuts:</strong> <kbd>J</kbd> toggle PiP &middot; <kbd>D</kbd> debug
       </div>
     </section>
 
@@ -87,13 +86,14 @@
     <section id="debug-section" class="debug hidden" data-testid="debug-section">
       <button id="debug-toggle" class="debug-toggle" data-testid="debug-toggle">&#9881; Debug</button>
       <div id="debug-content" class="debug-content hidden">
-        <div class="debug-row"><span class="debug-label">Tab ID:</span><span id="debug-tab-id" class="debug-value">—</span></div>
-        <div class="debug-row"><span class="debug-label">Message:</span><span id="debug-message" class="debug-value">—</span></div>
-        <div class="debug-row"><span class="debug-label">Last error:</span><span id="debug-last-error" class="debug-value debug-error">—</span></div>
-        <div class="debug-row"><span class="debug-label">Response:</span><span id="debug-response" class="debug-value">—</span></div>
+        <div class="debug-header-row">
+          <span class="debug-label">Tab:</span><span id="debug-tab-id" class="debug-value">—</span>
+          <button id="debug-clear" class="debug-btn debug-btn-small" title="Clear log">Clear</button>
+        </div>
+        <pre id="debug-log" class="debug-log"></pre>
         <div class="debug-actions">
-          <button id="debug-retry" class="debug-btn" data-testid="debug-retry">Retry GET_STATE</button>
-          <button id="debug-inject" class="debug-btn" data-testid="debug-inject">Re-inject content script</button>
+          <button id="debug-retry" class="debug-btn" data-testid="debug-retry">Retry</button>
+          <button id="debug-inject" class="debug-btn" data-testid="debug-inject">Re-inject</button>
         </div>
       </div>
     </section>
