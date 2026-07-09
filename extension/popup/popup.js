@@ -276,8 +276,17 @@ els.alignBtns.forEach(function (btn) {
 // Resync
 document.getElementById('resync-btn').addEventListener('click', function () {
   appendLog('resync requested');
-  sendToTab({ type: 'RESYNC' });
-  refresh();
+  sendToTab({ type: 'RESYNC' }).then(function () {
+    refresh();
+  });
+});
+
+// Restart
+document.getElementById('restart-btn').addEventListener('click', function () {
+  appendLog('restart requested');
+  sendToTab({ type: 'RESTART' }).then(function () {
+    refresh();
+  });
 });
 
 document.addEventListener('keydown', function (e) {

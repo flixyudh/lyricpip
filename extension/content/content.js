@@ -158,6 +158,18 @@
    *  is re-read every tick and stays fresh even after the tab was hidden while
    *  the media-snapshot source (main-world.js) may have stopped sending updates. */
   function nowSeconds() {
+    // On Spotify the DOM clock is the only reliable source of playback
+    // position — the media element found by findActiveMedia() is likely
+    // a short UI sound effect, not the actual music (Spotify uses a
+    // custom audio engine, not HTML5 MediaElement).
+    if (PLATFORM === 'spotify') {
+      const d = state.spotifyDom;
+      if (d.sec !== null) {
+        if (d.paused) return d.sec;
+        return d.sec + (Date.now() - d.at) / 1000;
+      }
+    }
+
     const t = state.time;
     // Fresh media-element snapshot (<2s old) — trust paused flag.
     if (t.current !== null) {
@@ -337,6 +349,8 @@
   }
 
   function isPlaybackPaused() {
+    // On Spotify the DOM clock is the authoritative source.
+    if (PLATFORM === 'spotify' && state.spotifyDom.sec !== null) return state.spotifyDom.paused;
     if (state.time.current !== null) return state.time.paused;
     if (state.spotifyDom.sec !== null) return state.spotifyDom.paused;
     return true;
@@ -960,6 +974,18 @@
         return false;
       }
       case 'RESYNC': {
+        onTrackChange();
+        sendResponse({ ok: true });
+        return false;
+      }
+      case 'RESTART': {
+        stopSyncLoop();
+        state.meta = null;
+        state.metaKey = null;
+        state.lastFetchTitle = null;
+        state.lastMediaSessionAt = 0;
+        state.offset = 0;
+        state.fetchSeq = 0;
         onTrackChange();
         sendResponse({ ok: true });
         return false;
