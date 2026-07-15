@@ -1,4 +1,4 @@
-# LyricPiP — Synced Lyrics & Picture-in-Picture
+# Flyrics — Synced Lyrics & Picture-in-Picture
 
 A production-ready Chrome extension (Manifest V3) that shows **karaoke-style synced lyrics** for music playing on **YouTube** and **Spotify Web**, with an **always-on-top Picture-in-Picture lyrics window** (Document PiP API).
 

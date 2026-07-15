@@ -31,15 +31,15 @@ Chrome extension (Manifest V3) at `extension/` with a marketing landing page at 
 - **Never** use global-flag (`/g`) regexes with `.test()` in cleaning logic (stateful lastIndex).
 - Keep `main-world.js` dependency-free and tiny — it runs inside YouTube/Spotify's own JS world.
 - Every interactive element gets a kebab-case `data-testid`.
-- LRC parsing goes through `window.LyricPiPLRC` (lrc-parser.js); don't duplicate parsers.
-- Debug logs use `[LyricPiP:popup]` / `[LyricPiP:content]` / `[LyricPiP:background]` /
-  `[LyricPiP:main]` prefixes consistently.
+- LRC parsing goes through `window.FlyricsLRC` (lrc-parser.js); don't duplicate parsers.
+- Debug logs use `[Flyrics:popup]` / `[Flyrics:content]` / `[Flyrics:background]` /
+  `[Flyrics:main]` prefixes consistently.
 - Content script has a DOM-based fallback for track metadata that polls every 2s when
   `navigator.mediaSession.metadata` is unavailable (YouTube `<h1>` / channel name, Spotify
   `context-item-info-title/artist`). Never remove this — some pages don't set mediaSession.
 
 ## Message protocols (do not change shapes without updating all three sides)
-- **MAIN world → content**: `window.postMessage({ source:'lyricpip-main', type:'MEDIA_STATE', payload })`
+- **MAIN world → content**: `window.postMessage({ source:'flyrics-main', type:'MEDIA_STATE', payload })`
 - **content → background**: `chrome.runtime.sendMessage({ type:'FETCH_LYRICS', queries:[{artist,track,album?}], duration })` → `{ ok, result|error }`
 - **popup → content**: `GET_STATE` / `SET_OFFSET {delta}` / `SET_FONT_SIZE {value}` / `SET_FONT_ALIGN {value}` / `RESYNC` (sendResponse-based)
 - **settings**: `chrome.storage.sync` keys `theme` (`'dark'|'light'`), `fontSize`, `fontAlign`;

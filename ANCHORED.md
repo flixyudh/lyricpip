@@ -1,4 +1,4 @@
-# ANCHORED.md — LyricPiP Project Anchor Document
+# ANCHORED.md — Flyrics Project Anchor Document
 
 > **Purpose**: This is the single source of truth for any AI agent or developer working on this
 > project. Read this first. It anchors the project's intent, architecture, invariants, and
@@ -8,7 +8,7 @@
 
 ## 1. What this project IS
 
-**LyricPiP** is a production-ready **Google Chrome extension (Manifest V3)** that shows
+**Flyrics** is a production-ready **Google Chrome extension (Manifest V3)** that shows
 **karaoke-style synced lyrics** for music playing on **YouTube** (`youtube.com`) and
 **Spotify Web** (`open.spotify.com`), including an **always-on-top Picture-in-Picture lyrics
 window** built on the **Document Picture-in-Picture API** (Chrome 116+).
@@ -38,7 +38,7 @@ extension. Deployed to GitHub Pages via GitHub Actions.
 │   ├── background.js           Service worker: LRCLIB lookups, caching
 │   ├── content/
 │   │   ├── main-world.js       MAIN-world script: reads mediaSession + media element time
-│   │   ├── lrc-parser.js       LRC format parser (window.LyricPiPLRC)
+│   │   ├── lrc-parser.js       LRC format parser (window.FlyricsLRC)
 │   │   ├── content.js          Core: floating PiP button, Document PiP window, sync engine,
 │   │   │                       DOM metadata fallback, messaging handler
 │   ├── popup/                  Extension popup (popup.html / popup.js + inline styles)
@@ -72,7 +72,7 @@ extension. Deployed to GitHub Pages via GitHub Actions.
    context — never "fix" this by moving the PiP trigger off the page.
 5. **Two JS worlds**: `main-world.js` runs in the page's MAIN world (to read
    `navigator.mediaSession`); everything else runs isolated. They talk via `window.postMessage`
-   with `source: 'lyricpip-main'`. Never merge these files.
+    with `source: 'flyrics-main'`. Never merge these files.
 6. **All interactive elements carry `data-testid`** attributes (kebab-case).
 7. **Every interactive element gets a data-testid**: each `<button>` and interactive element in
    the PiP window and popup has a kebab-case `data-testid` attribute.
@@ -108,7 +108,7 @@ Full details: `ARCHITECTURE.md`.
 | content.js `cleanTitle` | Global-flag regexes (`/g`) are stateful with `.test()` → intermittent wrong cleaning | All noise regexes are non-global (`/i` only) |
 | Spotify | No guaranteed accessible media element | DOM fallback: parse `[data-testid="playback-position"]` clock text + interpolate |
 | YouTube SPA | Navigation doesn't reload the page | Track change detected by polling mediaSession metadata key (`title|artist`) |
-| Extension update listener death | After extension update, old content script's `chrome.runtime.onMessage` stops working, but the guard (`window.__lyricpipLoaded`) prevents re-injected scripts from registering a new listener | Version-aware guard (`__lyricpipLoaded = manifest.version`) bypassed on version mismatch; popup resets guard before injection; old intervals/event listeners are cleaned up via stored global references. (Fixed in v1.1.0) |
+| Extension update listener death | After extension update, old content script's `chrome.runtime.onMessage` stops working, but the guard (`window.__flyricsLoaded`) prevents re-injected scripts from registering a new listener | Version-aware guard (`__flyricsLoaded = manifest.version`) bypassed on version mismatch; popup resets guard before injection; old intervals/event listeners are cleaned up via stored global references. (Fixed in v1.1.0) |
 | PiP cleanup | PiP window outliving render targets | `pagehide` listener removes the PiP render target from `targets[]` |
 | Sync drift | 500ms main-world poll + 250ms sync loop caused sluggish line updates | Increased poll to 100ms and switched to rAF sync loop. (Fixed in v1.1.0) |
 | Sync paused on playing tracks | rAF loop gated on `isPlaybackPaused()` which incorrectly returned `true` on some pages | Removed `isPlaybackPaused()` gate; loop runs while PiP is visible. (Fixed) |

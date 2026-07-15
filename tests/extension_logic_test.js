@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Node-based unit tests for LyricPiP extension logic:
+ * Node-based unit tests for Flyrics extension logic:
  *   - LRC parser (lrc-parser.js)
  *   - cleanTitle regex extracted from content.js
  *   - pickBest/scoreCandidate from background.js
@@ -42,7 +42,7 @@ function loadParser() {
   const sandbox = { window: {} };
   vm.createContext(sandbox);
   vm.runInContext(code, sandbox);
-  return sandbox.window.LyricPiPLRC;
+  return sandbox.window.FlyricsLRC;
 }
 
 // ---------- Load cleanTitle + cleanArtist by extracting from content.js ----------
@@ -217,7 +217,7 @@ function loadBackgroundFns() {
   });
 
   // ===== LRCLIB live endpoints =====
-  const UA = { 'Lrclib-Client': 'LyricPiP v1.0.0 (Chrome Extension)' };
+  const UA = { 'Lrclib-Client': 'Flyrics v1.1.7 (Chrome Extension)' };
   await test('LRCLIB /api/get returns syncedLyrics for Coldplay - Yellow', async () => {
     const url = 'https://lrclib.net/api/get?track_name=Yellow&artist_name=Coldplay&album_name=Parachutes&duration=269';
     const res = await fetch(url, { headers: UA });

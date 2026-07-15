@@ -1,4 +1,4 @@
-"""Generate LyricPiP extension icons (lyrics-lines mark on dark rounded square)."""
+"""Generate Flyrics extension icons (lyrics-lines mark on dark rounded square)."""
 from PIL import Image, ImageDraw
 import os
 

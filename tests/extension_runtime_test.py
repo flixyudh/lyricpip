@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Best-effort runtime test: load /app/extension as unpacked, navigate to a YouTube
-watch page, wait, and check whether the LyricPiP overlay was injected.
+  watch page, wait, and check whether the Flyrics overlay was injected.
 If this environment can't load the extension or reach YouTube, we mark untestable.
 """
 import asyncio

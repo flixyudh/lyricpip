@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "LyricPiP — Synced Lyrics & Picture-in-Picture",
+  "name": "Flyrics — Synced Lyrics & Picture-in-Picture",
   "version": "1.1.7",
   "description": "Karaoke-style synced lyrics for YouTube and Spotify Web, with an always-on-top Picture-in-Picture lyrics window. Powered by LRCLIB.",
   "minimum_chrome_version": "116",
@@ -11,7 +11,7 @@
   },
   "action": {
     "default_popup": "popup/popup.html",
-    "default_title": "LyricPiP — Synced Lyrics",
+    "default_title": "Flyrics — Synced Lyrics",
     "default_icon": {
       "16": "icons/icon16.png",
       "32": "icons/icon32.png",

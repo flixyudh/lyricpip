@@ -1,16 +1,16 @@
-/* LyricPiP — MAIN-world media snapshot
+/* Flyrics — MAIN-world media snapshot
  * Runs as a MAIN-world content script to access navigator.mediaSession.
  * Always restarts its interval on injection — clears any stale one from
  * a prior extension version that persisted in the MAIN world's global scope.
  */
 (function () {
-  if (window.__lyricpipMainInterval) {
-    clearInterval(window.__lyricpipMainInterval);
-    window.__lyricpipMainInterval = null;
+  if (window.__flyricsMainInterval) {
+    clearInterval(window.__flyricsMainInterval);
+    window.__flyricsMainInterval = null;
   }
-  if (window.__lyricpipMainRafId) {
-    cancelAnimationFrame(window.__lyricpipMainRafId);
-    window.__lyricpipMainRafId = null;
+  if (window.__flyricsMainRafId) {
+    cancelAnimationFrame(window.__flyricsMainRafId);
+    window.__flyricsMainRafId = null;
   }
 
   function findActiveMedia() {
@@ -56,7 +56,7 @@
 
   function postSnapshot() {
     try {
-      window.postMessage({ source: 'lyricpip-main', type: 'MEDIA_STATE', payload: snapshot() }, '*');
+      window.postMessage({ source: 'flyrics-main', type: 'MEDIA_STATE', payload: snapshot() }, '*');
     } catch (_e) {
       /* page may be unloading */
     }

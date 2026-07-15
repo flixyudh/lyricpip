@@ -1,12 +1,12 @@
 /**
- * LyricPiP — background service worker
+ * Flyrics — background service worker
  * Fetches lyrics from LRCLIB (https://lrclib.net) with a multi-strategy
  * lookup (exact get -> search by track+artist -> free-text search) and
  * caches results in memory + chrome.storage.session.
  */
 
 const LRCLIB = 'https://lrclib.net/api';
-const CLIENT_HEADER = { 'Lrclib-Client': 'LyricPiP v1.0.0 (Chrome Extension)' };
+const CLIENT_HEADER = { 'Lrclib-Client': 'Flyrics v1.1.7 (Chrome Extension)' };
 
 const memCache = new Map();
 

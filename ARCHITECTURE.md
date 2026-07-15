@@ -1,4 +1,4 @@
-# ARCHITECTURE.md — LyricPiP Technical Deep Dive
+# ARCHITECTURE.md — Flyrics Technical Deep Dive
 
 Companion to `ANCHORED.md` (read that first). This document explains exactly how data flows
 through the extension and why each piece exists.
@@ -11,7 +11,7 @@ through the extension and why each piece exists.
 │                                                                    │
 │  ┌──────────────────────────┐      window.postMessage              │
 │  │ main-world.js (MAIN)     │ ───────────────────────────┐         │
-│  │ • navigator.mediaSession │   { source:'lyricpip-main',│         │
+│  │ • navigator.mediaSession │   { source:'flyrics-main',│         │
 │  │   .metadata (title/artist│     type:'MEDIA_STATE',    │         │
 │  │   /album/artwork)        │     payload }  every 100ms │         │
 │  │ • <video>/<audio>:       │                            ▼         │
@@ -22,7 +22,7 @@ through the extension and why each piece exists.
 │                                 │ • floating PiP trigger btn   │    │
 │  ┌──────────────────────────┐   │ • Document PiP window       │    │
 │  │ lrc-parser.js (ISOLATED) │◄──│   (lyrics + media controls  │    │
-│  │ window.LyricPiPLRC       │   │    + settings panel)        │    │
+│  │ window.FlyricsLRC       │   │    + settings panel)        │    │
 │  │ .parse() / .indexAtSmooth() │   │ • rAF sync loop             │    │
 │  └──────────────────────────┘   │ • popup message handler     │    │
 │                                 │ • DOM metadata fallback     │    │
@@ -53,7 +53,7 @@ scripts get their **own** `navigator.mediaSession`, which is always empty. So `m
 (registered with `"world": "MAIN"` in the manifest, Chrome 111+) reads the real metadata and the
 real media element, then relays a snapshot every 100ms via `window.postMessage`.
 
-The isolated `content.js` validates `e.source === window && e.data.source === 'lyricpip-main'`
+The isolated `content.js` validates `e.source === window && e.data.source === 'flyrics-main'`
 before trusting any message.
 
 ### DOM-based fallback (when mediaSession is unavailable)
@@ -104,7 +104,7 @@ instrumental −2. A result must have synced/plain lyrics or be instrumental to 
 **Caching**: `memCache` Map (FIFO-capped at 200) + `chrome.storage.session`, keyed by
 `norm(artist)|norm(track)|duration-bucket(5s)`. Negative results (null) are cached too.
 
-Every LRCLIB request sends header `Lrclib-Client: LyricPiP v1.0.0 (Chrome Extension)`.
+Every LRCLIB request sends header `Lrclib-Client: Flyrics v1.1.7 (Chrome Extension)`.
 
 ## 5. Sync engine
 
@@ -113,7 +113,7 @@ A `requestAnimationFrame` loop in content.js (`tick()` / `startSyncLoop()`):
 2. Compute position via `nowSeconds()`: prefer media-element snapshot
    `current + (now − snapshotAt)/1000 × playbackRate` (frozen when paused); else Spotify DOM clock
    `[data-testid="playback-position"]` parsed + interpolated.
-3. `result = LyricPiPLRC.indexAtSmooth(lines, position + userOffset, ANIMATE_DURATION)`
+   3. `result = FlyricsLRC.indexAtSmooth(lines, position + userOffset, ANIMATE_DURATION)`
    — returns `{ index, progress }` via O(log n) binary search. Progress is 0…1 within the
    active line for per-frame karaoke highlighting.
 4. If `result.index` changed → `setActiveLine()` on **every render target**.
@@ -169,7 +169,7 @@ Messages to content script: `SET_OFFSET`, `SET_FONT_SIZE`, `SET_FONT_ALIGN`, `RE
 Theme writes to `chrome.storage.sync` (content listens to `onChanged`).
 The popup renders: current line preview, font-size controls (±, 10–48px), alignment buttons
 (L/C/R), offset (±0.5s), resync button, theme toggle, and debug section.
-All messaging logged with `[LyricPiP:popup]`.
+All messaging logged with `[Flyrics:popup]`.
 
 ## 9. Landing page (landing/)
 

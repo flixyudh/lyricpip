@@ -1,4 +1,4 @@
-# LyricPiP — Synced Lyrics & Picture-in-Picture
+# Flyrics — Synced Lyrics & Picture-in-Picture
 
 Karaoke-style synced lyrics for **YouTube** and **Spotify Web**, with an always-on-top PiP lyrics window. Powered by [LRCLIB](https://lrclib.net) — free, no API key required.
 
@@ -45,7 +45,7 @@ extension/          Chrome extension
   content/
     content.js      Sync engine, floating PiP button, PiP window, DOM fallback
     main-world.js   MAIN-world media snapshot (100ms interval)
-    lrc-parser.js   LRC parser (window.LyricPiPLRC)
+    lrc-parser.js   LRC parser (window.FlyricsLRC)
   popup/            Settings popup
   manifest.json     MV3 manifest
 landing/            Marketing landing page (Rsbuild + React)

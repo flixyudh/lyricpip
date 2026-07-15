@@ -1,18 +1,18 @@
-  /**
-   * LyricPiP — main content script (isolated world)
-   * - Receives track metadata + playback position from the MAIN-world script
-   * - Fetches lyrics via the background service worker (LRCLIB)
-   * - Renders a draggable on-page overlay with karaoke-style synced lyrics
-   * - Opens a Document Picture-in-Picture window with the same synced view
-   */
+   /**
+    * Flyrics — main content script (isolated world)
+    * - Receives track metadata + playback position from the MAIN-world script
+    * - Fetches lyrics via the background service worker (LRCLIB)
+    * - Renders a draggable on-page overlay with karaoke-style synced lyrics
+    * - Opens a Document Picture-in-Picture window with the same synced view
+    */
 (() => {
   let VER = '';
   try { VER = chrome.runtime.getManifest().version; } catch (_e) { /* chrome.runtime may be unavailable in some contexts */ }
-  if (VER && window.__lyricpipLoaded === VER) return;
-  window.__lyricpipLoaded = VER || Date.now().toString();
+  if (VER && window.__flyricsLoaded === VER) return;
+  window.__flyricsLoaded = VER || Date.now().toString();
 
   const PLATFORM = location.hostname.includes('spotify') ? 'spotify' : 'youtube';
-  const LRC = window.LyricPiPLRC;
+  const LRC = window.FlyricsLRC;
 
   const state = {
     metaKey: null,
@@ -79,7 +79,7 @@
   // Media state from MAIN world
   // ============================================================
   window.addEventListener('message', (e) => {
-    if (e.source !== window || !e.data || e.data.source !== 'lyricpip-main') return;
+    if (e.source !== window || !e.data || e.data.source !== 'flyrics-main') return;
     if (e.data.type === 'MEDIA_STATE') handleMediaState(e.data.payload);
   });
 
@@ -634,8 +634,8 @@
     if (pipBtn) return;
     if (!document.body) return;
     pipBtn = document.createElement('div');
-    pipBtn.id = 'lyricpip-pip-trigger';
-    pipBtn.setAttribute('data-testid', 'lyricpip-pip-trigger');
+    pipBtn.id = 'flyrics-pip-trigger';
+    pipBtn.setAttribute('data-testid', 'flyrics-pip-trigger');
     pipBtn.innerHTML = PIP_BTN_ICON;
     pipBtn.title = 'Open Picture-in-Picture lyrics';
     Object.assign(pipBtn.style, {
@@ -757,19 +757,20 @@
     root.appendChild(body);
     target.scroller = body;
 
-    const mediaRow = doc.createElement('div');
-    mediaRow.className = 'lpp-media-row';
+    const bottomBar = doc.createElement('div');
+    bottomBar.className = 'lpp-bottom-bar';
+
+    const mediaGroup = doc.createElement('div');
+    mediaGroup.className = 'lpp-media-group';
     const prevBtn = btn(doc, 'prev', 'Previous track', 'pip-prev', prevTrack);
-    mediaRow.appendChild(prevBtn);
+    mediaGroup.appendChild(prevBtn);
     const playBtn = btn(doc, 'play', 'Play / Pause', 'pip-playpause', togglePlayback);
-    mediaRow.appendChild(playBtn);
+    mediaGroup.appendChild(playBtn);
     target.playBtn = playBtn;
     const nextBtn = btn(doc, 'next', 'Next track', 'pip-next', nextTrack);
-    mediaRow.appendChild(nextBtn);
-    root.appendChild(mediaRow);
+    mediaGroup.appendChild(nextBtn);
+    bottomBar.appendChild(mediaGroup);
 
-    const footer = doc.createElement('div');
-    footer.className = 'lpp-footer';
     const offsetGroup = doc.createElement('div');
     offsetGroup.className = 'lpp-offset-group';
     offsetGroup.appendChild(btn(doc, 'minus', 'Lyrics earlier (-0.5s)', 'pip-offset-minus', () => adjustOffset(-0.5)));
@@ -779,14 +780,14 @@
     offsetValue.setAttribute('data-testid', 'pip-offset-value');
     offsetGroup.appendChild(offsetValue);
     offsetGroup.appendChild(btn(doc, 'plus', 'Lyrics later (+0.5s)', 'pip-offset-plus', () => adjustOffset(0.5)));
-    footer.appendChild(offsetGroup);
     target.offsetEl = offsetValue;
+    bottomBar.appendChild(offsetGroup);
 
     const source = doc.createElement('span');
     source.className = 'lpp-source';
     source.textContent = 'Lyrics \u00b7 LRCLIB';
-    footer.appendChild(source);
-    root.appendChild(footer);
+    bottomBar.appendChild(source);
+    root.appendChild(bottomBar);
 
     return target;
   }
@@ -836,10 +837,6 @@
     .lpp-plain { font-size:14px; color:var(--lpp-text-secondary); white-space:pre-wrap; line-height:1.7; }
     .lpp-status { display:flex; align-items:center; justify-content:center; height:100%; text-align:center;
       font-size:14px; color:var(--lpp-text-secondary); padding:0 16px; }
-    .lpp-media-row { display:flex; align-items:center; justify-content:center; gap:2px;
-      padding:2px 0; border-top:1px solid var(--lpp-border); flex-shrink:0; }
-    .lpp-media-row .lpp-btn { width:32px; height:28px; }
-    .lpp-media-row .lpp-btn svg { width:16px; height:16px; }
     .lpp-settings-panel { display:flex; flex-direction:column; gap:4px; padding:6px 14px;
       border-top:1px solid var(--lpp-border); flex-shrink:0; }
     .lpp-setting-row { display:flex; align-items:center; gap:6px; }
@@ -848,8 +845,11 @@
     .lpp-setting-value { font-size:11px; color:var(--lpp-text); min-width:20px; text-align:center; }
     .lpp-align-btn { font-size:11px; font-weight:700; width:24px; height:22px !important; }
     .lpp-align-active { background:var(--lpp-bg-hover) !important; color:var(--lpp-text) !important; }
-    .lpp-footer { display:flex; align-items:center; justify-content:space-between; padding:8px 14px;
+    .lpp-bottom-bar { display:flex; align-items:center; justify-content:space-between; padding:8px 14px;
       border-top:1px solid var(--lpp-border); flex-shrink:0; }
+    .lpp-media-group { display:flex; align-items:center; gap:2px; }
+    .lpp-media-group .lpp-btn { width:32px; height:28px; }
+    .lpp-media-group .lpp-btn svg { width:16px; height:16px; }
     .lpp-offset-group { display:flex; align-items:center; gap:4px; }
     .lpp-offset-value { font-size:11px; color:var(--lpp-text-secondary); min-width:44px; text-align:center;
       font-variant-numeric:tabular-nums; }
@@ -872,10 +872,10 @@
     try {
       const w = Math.max(200, Math.min(1200, state.pipWidth));
       const h = Math.max(150, Math.min(800, state.pipHeight));
-      const win = await window.documentPictureInPicture.requestWindow({ width: w, height: h, title: 'LyricPiP' });
+       const win = await window.documentPictureInPicture.requestWindow({ width: w, height: h, title: 'Flyrics' });
       state.pipWin = win;
       const doc = win.document;
-      doc.title = 'LyricPiP';
+      doc.title = 'Flyrics';
       doc.documentElement.setAttribute('data-lpp-theme', state.theme);
       const style = doc.createElement('style');
       style.textContent = PIP_CSS;
@@ -922,8 +922,8 @@
   function toast(text) {
     if (!toastEl) {
       toastEl = document.createElement('div');
-      toastEl.id = 'lyricpip-toast';
-      toastEl.setAttribute('data-testid', 'lyricpip-toast');
+      toastEl.id = 'flyrics-toast';
+      toastEl.setAttribute('data-testid', 'flyrics-toast');
       Object.assign(toastEl.style, {
         all: 'initial', position: 'fixed', bottom: '24px', left: '50%',
         transform: 'translateX(-50%)', zIndex: '2147483647',
@@ -1054,7 +1054,7 @@
         break;
       case 'd':
         e.preventDefault();
-        toast('LyricPiP active');
+        toast('Flyrics active');
         break;
     }
   });

@@ -39,7 +39,7 @@ jobs:
         shell: bash
         run: |
           VERSION=$(python3 -c "import json; print(json.load(open('${{ github.workspace }}/extension/manifest.json'))['version'])")
-          ZIPNAME="LyricPiP-v$VERSION.zip"
+          ZIPNAME="Flyrics-v$VERSION.zip"
           cd "${{ github.workspace }}"
           zip -r "/tmp/$ZIPNAME" extension/ -x "extension/*.pem"
           echo "ZIPNAME=$ZIPNAME" >> "$GITHUB_ENV"
@@ -50,14 +50,14 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           VERSION=$(python3 -c "import json; print(json.load(open('${{ github.workspace }}/extension/manifest.json'))['version'])")
-          ZIPNAME="LyricPiP-v$VERSION.zip"
+          ZIPNAME="Flyrics-v$VERSION.zip"
 
           # Clean up previous 'latest' release
           gh release view latest --json tagName --jq .tagName 2>/dev/null && \
             gh release delete latest --yes --cleanup-tag 2>/dev/null || true
 
           gh release create latest \
-            --title "LyricPiP v$VERSION" \
+            --title "Flyrics v$VERSION" \
             --notes "Auto-built from commit ${{ github.sha }}. See [Install instructions](https://flixyudh.github.io/lyricpip/#install)." \
             --target "${{ github.sha }}" \
             "/tmp/$ZIPNAME#$ZIPNAME"

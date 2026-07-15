@@ -16,7 +16,7 @@ export default function App() {
       <header className="hero">
         <div className="hero-badge">Chrome Extension</div>
         <h1>
-          <span className="hero-brand">LyricPiP</span>
+          <span className="hero-brand">Flyrics</span>
           <span className="hero-tagline">Synced Lyrics &amp; Picture-in-Picture</span>
         </h1>
         <p className="hero-desc">
@@ -124,7 +124,7 @@ export default function App() {
       </section>
 
       <footer className="footer">
-        <p>LyricPiP — MIT License</p>
+        <p>Flyrics — MIT License</p>
         <p>Lyrics from <a href="https://lrclib.net" target="_blank" rel="noopener noreferrer">LRCLIB</a>.</p>
       </footer>
     </div>

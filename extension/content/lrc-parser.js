@@ -1,13 +1,13 @@
 /**
- * LyricPiP — LRC format parser (isolated world)
+ * Flyrics — LRC format parser (isolated world)
  * Parses standard LRC text into a sorted array of { time, text } lines.
  * Supports multiple timestamps per line: [00:12.34][00:45.67] lyric text
  */
 (() => {
   let VER = '';
   try { VER = chrome.runtime.getManifest().version; } catch (_e) { /* chrome.runtime may be unavailable */ }
-  if (VER && window.__lyricpipLrcVer === VER) return;
-  window.__lyricpipLrcVer = VER || Date.now().toString();
+  if (VER && window.__flyricsLrcVer === VER) return;
+  window.__flyricsLrcVer = VER || Date.now().toString();
 
   const TIME_TAG = /\[(\d{1,2}):(\d{1,2})(?:[.:](\d{1,3}))?\]/g;
 
@@ -71,5 +71,5 @@
     return { index: idx, progress: 1 };
   }
 
-  window.LyricPiPLRC = { parse, indexAtSmooth };
+  window.FlyricsLRC = { parse, indexAtSmooth };
 })();
