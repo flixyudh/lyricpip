@@ -27,6 +27,8 @@
     fontSize: 20,
     fontAlign: 'center',
     pipWin: null,
+    pipWidth: 420,
+    pipHeight: 340,
     fetchTimer: null,
     fetchSeq: 0,
     lastMediaSessionAt: 0,
@@ -39,10 +41,12 @@
   // ============================================================
   // Settings
   // ============================================================
-  chrome.storage.sync.get({ theme: 'dark', fontSize: 20, fontAlign: 'center' }, (cfg) => {
+  chrome.storage.sync.get({ theme: 'dark', fontSize: 20, fontAlign: 'center', pipWidth: 420, pipHeight: 340 }, (cfg) => {
     state.theme = cfg.theme;
     state.fontSize = cfg.fontSize;
     state.fontAlign = cfg.fontAlign;
+    state.pipWidth = cfg.pipWidth;
+    state.pipHeight = cfg.pipHeight;
     applyTheme();
     applySettings();
   });
@@ -866,7 +870,9 @@
       return;
     }
     try {
-      const win = await window.documentPictureInPicture.requestWindow({ width: 420, height: 340, title: 'LyricPiP' });
+      const w = Math.max(200, Math.min(1200, state.pipWidth));
+      const h = Math.max(150, Math.min(800, state.pipHeight));
+      const win = await window.documentPictureInPicture.requestWindow({ width: w, height: h, title: 'LyricPiP' });
       state.pipWin = win;
       const doc = win.document;
       doc.title = 'LyricPiP';
@@ -883,7 +889,21 @@
       setActiveLine(target, state.activeIdx, state.activeProgress, 'instant');
       startSyncLoop();
 
+      function persistPipSize() {
+        const cw = win.outerWidth;
+        const ch = win.outerHeight;
+        if (cw > 0 && ch > 0) {
+          state.pipWidth = cw;
+          state.pipHeight = ch;
+          saveSetting('pipWidth', cw);
+          saveSetting('pipHeight', ch);
+        }
+      }
+
+      win.addEventListener('resize', persistPipSize);
+
       win.addEventListener('pagehide', () => {
+        persistPipSize();
         const i = targets.indexOf(target);
         if (i >= 0) targets.splice(i, 1);
         state.pipWin = null;
